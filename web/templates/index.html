@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Job Search Agent</title>
+    
+    <!-- Material Design 3 Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    
+    <!-- Material Design 3 Web Components -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@material/web/": "https://esm.run/@material/web/"
+            }
+        }
+    </script>
+    <script type="module">
+        import '@material/web/all.js';
+        import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+        document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- App Bar -->
+    <header class="app-bar">
+        <div class="app-bar-content">
+            <div class="app-bar-title">
+                <span class="material-symbols-outlined">work</span>
+                <h1 class="md-typescale-headline-small">LinkedIn Job Search Agent</h1>
+            </div>
+            <div class="app-bar-actions">
+                <!-- Auth Status Indicator -->
+                <div id="auth-status-container" class="auth-status-container">
+                    <md-filled-tonal-button id="login-btn" class="auth-button" style="display: none;">
+                        <md-icon slot="icon">login</md-icon>
+                        Login
+                    </md-filled-tonal-button>
+                    <div id="auth-status-badge" class="auth-status-badge" style="display: none;">
+                        <md-icon class="auth-icon">verified_user</md-icon>
+                        <span class="auth-text md-typescale-label-large">Authenticated</span>
+                        <md-icon-button id="logout-btn" title="Logout">
+                            <md-icon>logout</md-icon>
+                        </md-icon-button>
+                    </div>
+                </div>
+
+                <md-icon-button id="theme-toggle" title="Toggle theme">
+                    <md-icon>dark_mode</md-icon>
+                </md-icon-button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Search Form Section -->
+        <section class="search-section">
+            <div class="container">
+                <div class="search-card">
+                    <div class="card-header">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                            <span class="material-symbols-outlined" style="font-size: 48px; color: var(--linkedin-blue);">travel_explore</span>
+                            <h2 class="md-typescale-headline-medium" style="margin: 0;">Find Your Next Job</h2>
+                        </div>
+                        <p class="md-typescale-body-medium">Search LinkedIn for job opportunities with advanced filters</p>
+                    </div>
+                    
+                    <form id="job-search-form" class="search-form">
+                        <!-- Keywords Input -->
+                        <div class="input-group">
+                            <md-outlined-text-field
+                                id="keywords"
+                                label="Job Keywords"
+                                required
+                                placeholder="e.g. Python Developer, Data Scientist"
+                                supporting-text="Enter job title, skills, or keywords">
+                                <md-icon slot="leading-icon">search</md-icon>
+                            </md-outlined-text-field>
+                        </div>
+
+                        <!-- Location Input -->
+                        <div class="input-group">
+                            <md-outlined-text-field
+                                id="location"
+                                label="Location"
+                                placeholder="e.g. San Francisco, Remote"
+                                supporting-text="Leave empty for all locations">
+                                <md-icon slot="leading-icon">location_on</md-icon>
+                            </md-outlined-text-field>
+                        </div>
+
+                        <!-- Advanced Filters -->
+                        <div class="filters-row">
+                            <!-- Experience Level -->
+                            <div class="filter-group">
+                                <md-outlined-select id="experience" label="Experience Level">
+                                    <md-select-option value="">
+                                        <div slot="headline">Any Level</div>
+                                    </md-select-option>
+                                    <md-select-option value="entry">
+                                        <div slot="headline">Entry Level</div>
+                                    </md-select-option>
+                                    <md-select-option value="associate">
+                                        <div slot="headline">Associate</div>
+                                    </md-select-option>
+                                    <md-select-option value="mid-senior">
+                                        <div slot="headline">Mid-Senior</div>
+                                    </md-select-option>
+                                    <md-select-option value="director">
+                                        <div slot="headline">Director</div>
+                                    </md-select-option>
+                                    <md-select-option value="executive">
+                                        <div slot="headline">Executive</div>
+                                    </md-select-option>
+                                </md-outlined-select>
+                            </div>
+
+                            <!-- Job Type -->
+                            <div class="filter-group">
+                                <md-outlined-select id="job-type" label="Job Type">
+                                    <md-select-option value="">
+                                        <div slot="headline">Any Type</div>
+                                    </md-select-option>
+                                    <md-select-option value="full-time">
+                                        <div slot="headline">Full-time</div>
+                                    </md-select-option>
+                                    <md-select-option value="part-time">
+                                        <div slot="headline">Part-time</div>
+                                    </md-select-option>
+                                    <md-select-option value="contract">
+                                        <div slot="headline">Contract</div>
+                                    </md-select-option>
+                                    <md-select-option value="temporary">
+                                        <div slot="headline">Temporary</div>
+                                    </md-select-option>
+                                    <md-select-option value="internship">
+                                        <div slot="headline">Internship</div>
+                                    </md-select-option>
+                                </md-outlined-select>
+                            </div>
+
+                            <!-- Date Posted -->
+                            <div class="filter-group">
+                                <md-outlined-select id="date-posted" label="Date Posted">
+                                    <md-select-option value="">
+                                        <div slot="headline">Any Time</div>
+                                    </md-select-option>
+                                    <md-select-option value="past-24h">
+                                        <div slot="headline">Past 24 Hours</div>
+                                    </md-select-option>
+                                    <md-select-option value="past-week">
+                                        <div slot="headline">Past Week</div>
+                                    </md-select-option>
+                                    <md-select-option value="past-month">
+                                        <div slot="headline">Past Month</div>
+                                    </md-select-option>
+                                </md-outlined-select>
+                            </div>
+                        </div>
+
+                        <!-- Additional Options -->
+                        <div class="options-row">
+                            <div class="option-group">
+                                <md-outlined-text-field
+                                    id="max-jobs"
+                                    label="Max Jobs"
+                                    type="number"
+                                    value="25"
+                                    min="1"
+                                    max="100"
+                                    supporting-text="Maximum number of jobs to find (1-100)">
+                                </md-outlined-text-field>
+                            </div>
+
+                            <div class="option-group">
+                                <md-checkbox id="get-details" touch-target="wrapper"></md-checkbox>
+                                <label for="get-details" class="checkbox-label">
+                                    <span class="md-typescale-body-medium">Get detailed descriptions</span>
+                                    <span class="md-typescale-body-small">(slower but more complete data)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Use Authentication Toggle -->
+                        <div class="option-group">
+                            <md-checkbox id="use-auth" touch-target="wrapper"></md-checkbox>
+                            <label for="use-auth" class="checkbox-label">
+                                <span class="md-typescale-body-medium">Use LinkedIn authentication</span>
+                                <span class="md-typescale-body-small">(login required for better results)</span>
+                            </label>
+                        </div>
+
+                        <!-- Search Button -->
+                        <div class="search-actions">
+                            <md-filled-button id="search-btn" type="submit" class="search-button">
+                                <md-icon slot="icon">search</md-icon>
+                                Search Jobs
+                            </md-filled-button>
+
+                            <md-text-button id="clear-btn" type="button">
+                                <md-icon slot="icon">clear</md-icon>
+                                Clear Results
+                            </md-text-button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section id="progress-section" class="progress-section" style="display: none;">
+            <div class="container">
+                <div class="progress-card">
+                    <div class="progress-content">
+                        <md-circular-progress id="search-progress" indeterminate></md-circular-progress>
+                        <div class="progress-text">
+                            <h3 id="progress-title" class="md-typescale-title-medium">Searching...</h3>
+                            <p id="progress-message" class="md-typescale-body-medium">Starting job search...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="results-section" style="display: none;">
+            <div class="container">
+                <!-- Job Statistics Dashboard -->
+                <div id="stats-container" class="stats-container" style="display: none;">
+                    <!-- Statistics will be dynamically inserted here -->
+                </div>
+
+                <!-- Results Header -->
+                <div class="results-header">
+                    <div class="results-info">
+                        <h2 id="results-title" class="md-typescale-headline-medium">Job Results</h2>
+                        <p id="results-summary" class="md-typescale-body-medium">Found jobs matching your criteria</p>
+                    </div>
+
+                    <div class="results-actions">
+                        <md-outlined-button id="export-csv">
+                            <md-icon slot="icon">download</md-icon>
+                            Export CSV
+                        </md-outlined-button>
+
+                        <md-outlined-button id="export-json">
+                            <md-icon slot="icon">code</md-icon>
+                            Export JSON
+                        </md-outlined-button>
+
+                        <md-outlined-button id="export-excel">
+                            <md-icon slot="icon">table_view</md-icon>
+                            Export Excel
+                        </md-outlined-button>
+                    </div>
+                </div>
+
+                <!-- Sort and Filter Controls -->
+                <div class="controls-bar">
+                    <div class="sort-controls">
+                        <span class="sort-label">
+                            <span class="material-symbols-outlined">sort</span>
+                            Sort by:
+                        </span>
+                        <div class="sort-buttons">
+                            <button class="sort-button active" data-sort="relevance" onclick="window.jobSearchApp.sortJobs('relevance')">
+                                <span class="material-symbols-outlined">star</span>
+                                Relevance
+                            </button>
+                            <button class="sort-button" data-sort="date" onclick="window.jobSearchApp.sortJobs('date')">
+                                <span class="material-symbols-outlined">schedule</span>
+                                Date
+                            </button>
+                            <button class="sort-button" data-sort="company" onclick="window.jobSearchApp.sortJobs('company')">
+                                <span class="material-symbols-outlined">domain</span>
+                                Company
+                            </button>
+                            <button class="sort-button" data-sort="title" onclick="window.jobSearchApp.sortJobs('title')">
+                                <span class="material-symbols-outlined">work</span>
+                                Title
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Filter Bar -->
+                <div class="filter-bar">
+                    <md-outlined-text-field
+                        id="job-filter"
+                        label="Filter jobs..."
+                        placeholder="Search by title, company, or location">
+                        <md-icon slot="leading-icon">filter_list</md-icon>
+                    </md-outlined-text-field>
+
+                    <div class="filter-chips">
+                        <md-filter-chip id="filter-with-salary" label="With Salary"></md-filter-chip>
+                        <md-filter-chip id="filter-remote" label="Remote"></md-filter-chip>
+                    </div>
+                </div>
+
+                <!-- Job Cards Container -->
+                <div id="job-cards-container" class="job-cards-container">
+                    <!-- Job cards will be dynamically inserted here -->
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-container" class="pagination-container" style="display: none;">
+                    <!-- Pagination will be dynamically inserted here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Action Button - Scroll to Top -->
+    <div class="fab-container" id="fab-container" style="display: none;">
+        <button class="fab tooltip" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+            <span class="material-symbols-outlined">arrow_upward</span>
+            <span class="tooltiptext">Back to top</span>
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="container">
+            <p class="md-typescale-body-small">
+                LinkedIn Job Search Agent • Built with Material Design 3 •
+                <a href="https://github.com" target="_blank">View on GitHub</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Snackbar for notifications -->
+    <div id="snackbar-container"></div>
+
+    <!-- Login Dialog -->
+    <md-dialog id="login-dialog">
+        <div slot="headline" class="dialog-headline">
+            <md-icon class="dialog-icon">login</md-icon>
+            <span>LinkedIn Authentication</span>
+        </div>
+
+        <form slot="content" id="login-form" method="dialog">
+            <div class="dialog-content">
+                <p class="md-typescale-body-medium dialog-description">
+                    Login to LinkedIn for better access to job listings. Your credentials are stored securely and only used locally.
+                </p>
+
+                <!-- Check for .env credentials -->
+                <div id="env-credentials-notice" class="env-notice" style="display: none;">
+                    <md-icon class="notice-icon">info</md-icon>
+                    <div class="notice-content">
+                        <p class="md-typescale-body-small">
+                            Credentials found in .env file. Click "Use Saved Credentials" to login automatically.
+                        </p>
+                        <md-filled-tonal-button id="use-env-btn" type="button" class="use-env-button">
+                            <md-icon slot="icon">key</md-icon>
+                            Use Saved Credentials
+                        </md-filled-tonal-button>
+                    </div>
+                </div>
+
+                <div class="divider-text">
+                    <span class="md-typescale-label-medium">Or enter credentials manually</span>
+                </div>
+
+                <div class="login-form-fields">
+                    <md-outlined-text-field
+                        id="login-email"
+                        label="LinkedIn Email"
+                        type="email"
+                        required
+                        autocomplete="email">
+                        <md-icon slot="leading-icon">email</md-icon>
+                    </md-outlined-text-field>
+
+                    <md-outlined-text-field
+                        id="login-password"
+                        label="LinkedIn Password"
+                        type="password"
+                        required
+                        autocomplete="current-password">
+                        <md-icon slot="leading-icon">lock</md-icon>
+                    </md-outlined-text-field>
+                </div>
+
+                <div id="login-error" class="login-error" style="display: none;">
+                    <md-icon class="error-icon">error</md-icon>
+                    <span id="login-error-text" class="md-typescale-body-small"></span>
+                </div>
+
+                <div class="login-info">
+                    <md-icon class="info-icon">shield</md-icon>
+                    <p class="md-typescale-body-small">
+                        Your credentials are only used locally and are never sent to any third-party servers.
+                        Session cookies are saved for convenience.
+                    </p>
+                </div>
+            </div>
+        </form>
+
+        <div slot="actions">
+            <md-text-button form="login-form" value="cancel">Cancel</md-text-button>
+            <md-filled-button id="login-submit-btn" form="login-form">
+                <md-icon slot="icon">login</md-icon>
+                Login
+            </md-filled-button>
+        </div>
+    </md-dialog>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
